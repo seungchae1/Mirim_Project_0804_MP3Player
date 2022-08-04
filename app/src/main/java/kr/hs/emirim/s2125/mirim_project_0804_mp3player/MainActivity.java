@@ -24,12 +24,11 @@ public class MainActivity extends AppCompatActivity {
     //Device File Explorer -> sdcard -> upload -> mp3파일 넣기
 
     ListView list1;
-    Button btnPlay, btnStop;
+    Button btnPlay, btnStop, btnPause;
     TextView textMusic;
     ProgressBar proBar;
     ArrayList<String> musicList;
     String selectedMusic;
-
     String musicPath = Environment.getExternalStorageDirectory().getPath()+"/"; // sdcard 의 directory 경로
     MediaPlayer mPlayer;
     @Override
@@ -42,6 +41,7 @@ public class MainActivity extends AppCompatActivity {
         list1 = findViewById(R.id.list1);
         btnPlay = findViewById(R.id.btn_play);
         btnStop = findViewById(R.id.btn_stop);
+        btnPause = findViewById(R.id.btn_pause);
         textMusic = findViewById(R.id.text_music);
         proBar = findViewById(R.id.pro_bar);
         musicList = new ArrayList<String>();
@@ -96,5 +96,22 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         btnStop.setClickable(false);
+        btnPause.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if(btnPause.getText().toString().equals("이어듣기")){
+                    mPlayer.start();
+                    btnPause.setText("일시정지");
+                    textMusic.setText("실행중인 음악 : "+selectedMusic);
+                }
+                else{
+                    mPlayer.pause();
+                    btnPause.setText("이어듣기");
+                    textMusic.setText("일시정지중인 음악 : "+selectedMusic);
+                }
+                btnPlay.setClickable(false);
+                btnStop.setClickable(true);
+            }
+        });
     }
 }
