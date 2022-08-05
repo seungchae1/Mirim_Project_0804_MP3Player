@@ -7,6 +7,7 @@ import android.Manifest;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.SystemClock;
 import android.view.View;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
@@ -14,10 +15,12 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.ProgressBar;
+import android.widget.SeekBar;
 import android.widget.TextView;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
@@ -25,10 +28,10 @@ public class MainActivity extends AppCompatActivity {
 
     ListView list1;
     Button btnPlay, btnStop, btnPause;
-    TextView textMusic;
-    ProgressBar proBar;
+    TextView textMusic, textTime;
     ArrayList<String> musicList;
     String selectedMusic;
+    SeekBar seekBar;
     String musicPath = Environment.getExternalStorageDirectory().getPath()+"/"; // sdcard 의 directory 경로
     MediaPlayer mPlayer;
     @Override
@@ -43,8 +46,9 @@ public class MainActivity extends AppCompatActivity {
         btnStop = findViewById(R.id.btn_stop);
         btnPause = findViewById(R.id.btn_pause);
         textMusic = findViewById(R.id.text_music);
-        proBar = findViewById(R.id.pro_bar);
         musicList = new ArrayList<String>();
+        seekBar = findViewById(R.id.seek_bar);
+        textTime = findViewById(R.id.text_time);
         File[] files = new File(musicPath).listFiles();
         String fileName, extName;
         for(File file : files){
@@ -77,7 +81,6 @@ public class MainActivity extends AppCompatActivity {
                     btnPlay.setClickable(false);
                     btnStop.setClickable(true);
                     textMusic.setText("실행중인 음악 : "+selectedMusic);
-                    proBar.setVisibility(View.VISIBLE);
                 }catch (IOException e){
                     e.printStackTrace();
                 }
@@ -91,8 +94,9 @@ public class MainActivity extends AppCompatActivity {
                 mPlayer.reset();
                 btnPlay.setClickable(true);
                 btnStop.setClickable(false);
+                btnPlay.setClickable(false);
                 textMusic.setText("실행중인 음악 : ");
-                proBar.setVisibility(View.INVISIBLE);
+                textTime.setText("진행중인 음악 : ");
             }
         });
         btnStop.setClickable(false);
@@ -110,8 +114,30 @@ public class MainActivity extends AppCompatActivity {
                     textMusic.setText("일시정지중인 음악 : "+selectedMusic);
                 }
                 btnPlay.setClickable(false);
+                btnPause.setClickable(true);
                 btnStop.setClickable(true);
             }
         });
+
+        //쓰레드 익명 메소드
+        new Thread(){
+            SimpleDateFormat timeFormat = new SimpleDateFormat("mm:ss");
+            @Override
+            public void run() {
+                if(mPlayer == null)
+                    return;
+                seekBar.setMax(mPlayer.getDuration());
+                while (mPlayer.isPlaying()){
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            seekBar.setProgress(mPlayer.getCurrentPosition());
+                            textTime.setText("진행시간 : "+timeFormat.format(mPlayer.getCurrentPosition()));
+                        }
+                    });
+                    SystemClock.sleep(200);
+                }
+            }
+        };
     }
 }
